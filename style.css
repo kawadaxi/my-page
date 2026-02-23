@@ -1,0 +1,313 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #333;
+  font-family: Georgia, "Times New Roman", "Songti SC", "STSong", serif;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+a {
+  color: #1d5ea8;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 20px 30px;
+}
+
+.site-header {
+  border-bottom: 1px solid #e4e4e4;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.site-header .tagline {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #777;
+}
+
+.site-actions {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.cloud-alert {
+  border: 1px solid #eed9a8;
+  background: #fff9ea;
+  color: #7a5a10;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  column-gap: 40px;
+}
+
+.content {
+  min-width: 0;
+}
+
+.post {
+  margin-bottom: 40px;
+}
+
+.post-date {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  color: #8c8c8c;
+  text-transform: uppercase;
+}
+
+.post-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: #222;
+}
+
+.post p {
+  margin: 0 0 12px;
+}
+
+.post-more {
+  margin-top: 0;
+}
+
+.post-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+.hidden {
+  display: none;
+}
+
+.detail-cover-wrap {
+  margin: 10px 0 16px;
+}
+
+.detail-cover-wrap img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #e5e5e5;
+}
+
+.sidebar {
+  font-size: 14px;
+  color: #555;
+}
+
+.panel {
+  margin-bottom: 26px;
+}
+
+.panel h4 {
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e6e6e6;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #666;
+}
+
+.panel p {
+  margin: 0;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.panel li {
+  margin-bottom: 4px;
+}
+
+.site-footer {
+  border-top: 1px solid #e4e4e4;
+  margin-top: 24px;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #888;
+}
+
+.site-footer .divider {
+  margin: 0 8px;
+}
+
+.admin-page {
+  max-width: 1080px;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.admin-card {
+  border: 1px solid #e4e4e4;
+  padding: 16px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.admin-card h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.admin-card label {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+.admin-card input[type="text"],
+.admin-card input[type="date"],
+.admin-card input[type="file"],
+.admin-card textarea {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #d6d6d6;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.admin-card textarea {
+  resize: vertical;
+}
+
+.admin-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-card button,
+.import-label {
+  border: 1px solid #c9c9c9;
+  background: #f4f4f4;
+  color: #333;
+  font-size: 13px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #1d5ea8;
+  border-color: #1d5ea8;
+  color: #fff;
+}
+
+.import-label {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.import-label input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.admin-post-item {
+  border: 1px solid #ececec;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-post-item p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #777;
+}
+
+.admin-post-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.danger {
+  border-color: #bf4848;
+  color: #9f2f2f;
+  background: #fff5f5;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #777;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+  }
+
+  .sidebar {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid #efefef;
+  }
+
+  .post-title {
+    font-size: 25px;
+  }
+
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 14px 14px 24px;
+  }
+
+  .site-header h1 {
+    font-size: 26px;
+  }
+
+  .post-title {
+    font-size: 22px;
+  }
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>博客云端配置向导</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page admin-page">
+    <header class="site-header">
+      <h1><a href="setup.html">云端配置向导</a></h1>
+      <p class="tagline">按顺序粘贴配置并测试，成功后可直接使用后台</p>
+      <p class="site-actions">
+        <a href="index.html">前台首页</a>
+        <span class="divider">|</span>
+        <a href="admin.html">后台管理</a>
+      </p>
+    </header>
+
+    <p id="setup-alert" class="cloud-alert hidden"></p>
+
+    <section class="admin-card">
+      <h2>第 1 步：填写 Supabase API</h2>
+      <label>Project URL</label>
+      <input id="cfgUrl" type="text" placeholder="https://xxxxx.supabase.co">
+
+      <label>anon public key</label>
+      <textarea id="cfgAnonKey" rows="5" placeholder="粘贴 Supabase anon public key"></textarea>
+
+      <label>Storage Bucket（默认 post-images）</label>
+      <input id="cfgBucket" type="text" placeholder="post-images">
+
+      <div class="admin-actions">
+        <button id="saveCfg" class="btn-primary" type="button">保存到浏览器</button>
+        <button id="testCfg" type="button">测试数据库连接</button>
+        <button id="clearCfg" type="button" class="danger">清空配置</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>第 2 步：初始化数据库</h2>
+      <p>在 Supabase 的 SQL Editor 执行这个文件内容：</p>
+      <p><code>/Users/hesheng/Desktop/hs-work/AI- work-1/supabase/schema.sql</code></p>
+      <p>执行完后，再点上面的“测试数据库连接”。</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>第 3 步：创建管理员</h2>
+      <p>到 Supabase 后台：</p>
+      <p><code>Authentication -> Users -> Add user</code></p>
+      <p>创建你的管理员邮箱和密码，然后去 <a href="admin.html">admin.html</a> 登录。</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>第 4 步：发布上线（免费）</h2>
+      <p>上传这些文件到 GitHub Pages：</p>
+      <p><code>index.html, admin.html, setup.html, style.css, cloud-config.js, cloud.js, site.js, admin.js</code></p>
+      <p>提示：如果要在新电脑继续编辑，先打开 <code>setup.html</code> 再填一次 API 配置。</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-config.js"></script>
+  <script src="setup.js"></script>
+</body>
+</html>

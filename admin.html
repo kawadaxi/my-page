@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>博客后台</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page admin-page">
+    <header class="site-header">
+      <h1><a href="admin.html">博客后台</a></h1>
+      <p class="tagline">免费云端版：登录后在线发布、编辑、删除文章</p>
+      <p class="site-actions">
+        <a href="index.html">返回前台首页</a>
+        <span class="divider">|</span>
+        <a href="setup.html">云端配置向导</a>
+      </p>
+    </header>
+
+    <p id="admin-alert" class="cloud-alert hidden"></p>
+
+    <section class="admin-card" id="auth-card">
+      <h2>管理员登录</h2>
+      <label>邮箱</label>
+      <input id="loginEmail" type="email" placeholder="kawadaxi@gmail.com">
+
+      <label>密码</label>
+      <input id="loginPassword" type="password" placeholder="3/PXh_z+T@E-B/s">
+
+      <div class="admin-actions">
+        <button id="loginBtn" class="btn-primary" type="button">登录</button>
+        <button id="logoutBtn" type="button">退出登录</button>
+      </div>
+      <p class="hint" id="auth-status">未登录</p>
+    </section>
+
+    <div class="admin-layout hidden" id="admin-main">
+      <section class="admin-card">
+        <h2>站点设置</h2>
+        <label>网站标题</label>
+        <input id="siteTitle" type="text" placeholder="例如：小明的 BLOG">
+
+        <label>副标题</label>
+        <input id="siteTagline" type="text" placeholder="一句话介绍你的博客">
+
+        <label>关于我</label>
+        <textarea id="aboutText" rows="4" placeholder="例如：你好，我是小明，后端工程师。"></textarea>
+
+        <button id="saveSiteConfig" class="btn-primary" type="button">保存站点设置</button>
+      </section>
+
+      <section class="admin-card">
+        <h2 id="editorTitle">写新文章</h2>
+
+        <label>文章标题</label>
+        <input id="postTitle" type="text" placeholder="输入文章标题">
+
+        <label>发布日期</label>
+        <input id="postDate" type="date">
+
+        <label>作者名</label>
+        <input id="postAuthor" type="text" placeholder="例如：小明">
+
+        <label>摘要（显示在首页）</label>
+        <textarea id="postExcerpt" rows="3" placeholder="100~200 字左右"></textarea>
+
+        <label>正文（支持多段落，段落之间空一行）</label>
+        <textarea id="postContent" rows="10" placeholder="在这里写完整文章内容"></textarea>
+
+        <label>封面图（可选）</label>
+        <input id="postCover" type="file" accept="image/*">
+
+        <div class="admin-actions">
+          <button id="savePost" class="btn-primary" type="button">保存文章</button>
+          <button id="resetEditor" type="button">清空编辑器</button>
+        </div>
+      </section>
+
+      <section class="admin-card full-width">
+        <h2>文章列表</h2>
+        <p class="hint">点击“编辑”可继续修改，点击“删除”会永久删除云端文章。</p>
+        <div id="adminPostList"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-config.js"></script>
+  <script src="cloud.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

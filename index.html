@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我的博客</title>
+  <meta name="description" content="一个简洁的个人博客，记录思考与生活。">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <h1><a href="index.html" id="site-title-link">我的 BLOG</a></h1>
+      <p class="tagline" id="site-tagline">思绪来得快去得也快，偶尔会在这里停留</p>
+      <p class="site-actions">
+        <a href="admin.html">写文章 / 管理后台</a>
+        <span class="divider">|</span>
+        <a href="setup.html">云端配置向导</a>
+      </p>
+    </header>
+
+    <p id="front-alert" class="cloud-alert hidden"></p>
+
+    <div class="layout">
+      <main class="content">
+        <section id="post-list-view"></section>
+
+        <article id="post-detail-view" class="post hidden">
+          <h2 class="post-date" id="detail-date"></h2>
+          <h3 class="post-title" id="detail-title"></h3>
+          <div id="detail-cover-wrap" class="detail-cover-wrap hidden">
+            <img id="detail-cover" alt="文章封面">
+          </div>
+          <div id="detail-content"></div>
+          <p class="post-meta" id="detail-meta"></p>
+          <p><a href="#" id="back-to-list">« 返回首页文章列表</a></p>
+        </article>
+      </main>
+
+      <aside class="sidebar">
+        <section class="panel">
+          <h4>About</h4>
+          <p id="about-text">你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。</p>
+        </section>
+
+        <section class="panel">
+          <h4>Archive</h4>
+          <ul id="archive-list"></ul>
+        </section>
+
+        <section class="panel">
+          <h4>Recent Posts</h4>
+          <ul id="recent-posts"></ul>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="site-footer">
+      <a href="admin.html">进入后台写文章</a>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="cloud-config.js"></script>
+  <script src="cloud.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>
