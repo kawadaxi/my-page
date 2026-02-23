@@ -294,8 +294,16 @@
     });
   }
 
+  function clearAuthInputs() {
+    byId('loginEmail').value = '';
+    byId('loginPassword').value = '';
+  }
+
   async function init() {
     if (!requireClient()) return;
+    clearAuthInputs();
+    window.addEventListener('pageshow', clearAuthInputs);
+    setTimeout(clearAuthInputs, 0);
     bindEvents();
     await initAuth();
   }
