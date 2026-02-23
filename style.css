@@ -40,7 +40,7 @@ a:hover {
 
 .front-theme .site-header h1 {
   margin: 0;
-  font-size: 50px;
+  font-size: 18px;
   line-height: 1;
   letter-spacing: 0.2px;
   text-shadow: 1px 1px 0 #4b5f73;
@@ -54,7 +54,7 @@ a:hover {
 .front-theme .site-header .tagline {
   margin: 3px 0 0;
   color: #ebf1f6;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -85,7 +85,7 @@ a:hover {
 
 .front-theme .post-date {
   margin: 0 0 6px;
-  font-size: 30px;
+  font-size: 13px;
   line-height: 1.12;
   color: #2f3238;
   text-transform: uppercase;
@@ -94,7 +94,7 @@ a:hover {
 
 .front-theme .post-title {
   margin: 0 0 8px;
-  font-size: 40px;
+  font-size: 16px;
   line-height: 1.1;
   font-weight: 400;
   border-left: 8px solid #d7dde3;
@@ -108,7 +108,7 @@ a:hover {
 
 .front-theme .post p {
   margin: 0 0 8px;
-  font-size: 29px;
+  font-size: 12px;
 }
 
 .front-theme .post-more {
@@ -118,7 +118,7 @@ a:hover {
 .front-theme .post-meta {
   text-align: right;
   color: #6b6f76;
-  font-size: 26px;
+  font-size: 11px;
 }
 
 .front-theme .detail-cover-wrap {
@@ -146,7 +146,7 @@ a:hover {
   padding: 2px 8px;
   background: #8ea3b7;
   color: #f0f6fc;
-  font-size: 27px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -159,13 +159,13 @@ a:hover {
 .front-theme .panel li {
   margin: 0 0 2px;
   color: #434b53;
-  font-size: 26px;
+  font-size: 12px;
 }
 
 .front-theme .panel p {
   margin: 0;
   color: #495159;
-  font-size: 26px;
+  font-size: 12px;
 }
 
 .front-theme .search-row {
@@ -177,7 +177,7 @@ a:hover {
 .front-theme .search-row input,
 .front-theme .search-row button {
   border: 1px solid #999;
-  font-size: 25px;
+  font-size: 12px;
   padding: 2px 4px;
   box-sizing: border-box;
 }
