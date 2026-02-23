@@ -242,12 +242,16 @@
   async function logout() {
     await client.auth.signOut();
     setAuthStatus('未登录');
+    byId('auth-card').classList.remove('hidden');
     byId('admin-main').classList.add('hidden');
+    byId('loginPassword').value = '';
   }
 
   async function afterLogin(user) {
     if (!user) return;
     setAuthStatus('已登录：' + (user.email || '管理员'));
+    byId('auth-card').classList.add('hidden');
+    byId('loginPassword').value = '';
     byId('admin-main').classList.remove('hidden');
     await loadSiteSettings();
     await loadPosts();
@@ -261,7 +265,9 @@
       await afterLogin(user);
     } else {
       setAuthStatus('未登录');
+      byId('auth-card').classList.remove('hidden');
       byId('admin-main').classList.add('hidden');
+      byId('loginPassword').value = '';
     }
 
     client.auth.onAuthStateChange(function (event, session) {
@@ -270,7 +276,9 @@
         afterLogin(u);
       } else {
         setAuthStatus('未登录');
+        byId('auth-card').classList.remove('hidden');
         byId('admin-main').classList.add('hidden');
+        byId('loginPassword').value = '';
       }
     });
   }
