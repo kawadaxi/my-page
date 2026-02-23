@@ -1,7 +1,7 @@
 (function () {
   var defaults = {
-    SUPABASE_URL: 'https://YOUR_PROJECT_REF.supabase.co',
-    SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+    SUPABASE_URL: 'https://ufuhkcxbmttsfgtrdmtw.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmdWhrY3hibXR0c2ZndHJkbXR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3OTg5MjksImV4cCI6MjA4NzM3NDkyOX0.aJrF6zNv6SJoolokI3gdGiGa9FkqZga_5XwwWSjkjNk',
     STORAGE_BUCKET: 'post-images'
   };
 
