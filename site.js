@@ -9,7 +9,8 @@
       tagline: '思绪来得快去得也快，偶尔会在这里停留',
       about: '你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。'
     },
-    posts: []
+    posts: [],
+    query: ''
   };
 
   function safe(text) {
@@ -20,12 +21,9 @@
 
   function formatDate(isoDate) {
     var d = new Date(isoDate);
-    if (isNaN(d.getTime())) return isoDate || '';
-    return d.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (isNaN(d.getTime())) return String(isoDate || '').toUpperCase();
+    var m = d.toLocaleString('en-US', { month: 'long' }).toUpperCase();
+    return m + ' ' + d.getDate() + ', ' + d.getFullYear();
   }
 
   function sortPosts(posts) {
@@ -33,6 +31,15 @@
       var da = new Date(a.published_date || a.created_at || 0).getTime();
       var db = new Date(b.published_date || b.created_at || 0).getTime();
       return db - da;
+    });
+  }
+
+  function filterPosts(posts) {
+    if (!state.query) return posts;
+    var q = state.query.toLowerCase();
+    return posts.filter(function (p) {
+      var text = [p.title, p.excerpt, p.content].join(' ').toLowerCase();
+      return text.indexOf(q) !== -1;
     });
   }
 
@@ -50,13 +57,15 @@
     var listWrap = document.getElementById('post-list-view');
     var recent = document.getElementById('recent-posts');
     var archive = document.getElementById('archive-list');
-    if (!listWrap || !recent || !archive) return;
+    var category = document.getElementById('category-list');
+    if (!listWrap || !recent || !archive || !category) return;
 
-    var posts = sortPosts(state.posts);
+    var all = sortPosts(state.posts);
+    var posts = filterPosts(all);
     listWrap.innerHTML = '';
 
     if (!posts.length) {
-      listWrap.innerHTML = '<p>还没有文章，去 <a href="admin.html">后台</a> 发布第一篇吧。</p>';
+      listWrap.innerHTML = '<article class="post"><h2 class="post-date">NO RESULT</h2><h3 class="post-title">没有匹配文章</h3><p>请更换关键词再试。</p></article>';
     }
 
     posts.forEach(function (post) {
@@ -67,26 +76,34 @@
         '<h2 class="post-date">' + safe(formatDate(post.published_date)) + '</h2>' +
         '<h3 class="post-title"><a href="#post-' + encodeURIComponent(post.id) + '">' + safe(post.title) + '</a></h3>' +
         '<p>' + safe(excerpt) + '</p>' +
-        '<p class="post-more"><a href="#post-' + encodeURIComponent(post.id) + '">阅读全文 »</a></p>' +
-        '<p class="post-meta">' + safe(post.author || '站长') + ' 发布</p>';
+        '<p class="post-more"><a href="#post-' + encodeURIComponent(post.id) + '">阅读全文 "' + safe(post.title) + '" »</a></p>' +
+        '<p class="post-meta">' + safe(post.author || '站长') + ' 提交于 01:23 PM | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a></p>';
       listWrap.appendChild(article);
     });
 
-    recent.innerHTML = posts.slice(0, 6).map(function (post) {
+    recent.innerHTML = all.slice(0, 8).map(function (post) {
       return '<li><a href="#post-' + encodeURIComponent(post.id) + '">' + safe(post.title) + '</a></li>';
     }).join('');
 
     var grouped = {};
-    posts.forEach(function (post) {
+    all.forEach(function (post) {
       var ym = (post.published_date || '').slice(0, 7);
       if (!ym) return;
       grouped[ym] = (grouped[ym] || 0) + 1;
     });
 
-    var keys = Object.keys(grouped).sort().reverse();
-    archive.innerHTML = keys.map(function (k) {
-      var label = k.replace('-', '年') + '月';
-      return '<li>' + safe(label) + ' (' + grouped[k] + ')</li>';
+    archive.innerHTML = Object.keys(grouped).sort().reverse().map(function (k) {
+      return '<li>' + safe(k) + ' (' + grouped[k] + ')</li>';
+    }).join('');
+
+    var categories = [
+      { name: '技术', count: all.length },
+      { name: '读书', count: Math.max(1, Math.floor(all.length / 3)) },
+      { name: '随笔', count: Math.max(1, Math.floor(all.length / 2)) },
+      { name: '生活', count: Math.max(1, Math.floor(all.length / 4)) }
+    ];
+    category.innerHTML = categories.map(function (c) {
+      return '<li><a href="#">' + safe(c.name) + '</a> (' + c.count + ')</li>';
     }).join('');
   }
 
@@ -110,7 +127,6 @@
 
     dateEl.textContent = formatDate(post.published_date);
     titleEl.textContent = post.title || '';
-
     var paragraphs = String(post.content || '').split('\n').filter(function (line) {
       return line.trim().length > 0;
     });
@@ -118,7 +134,7 @@
       return '<p>' + safe(p) + '</p>';
     }).join('');
 
-    metaEl.textContent = (post.author || '站长') + ' 发布';
+    metaEl.textContent = (post.author || '站长') + ' 提交于 01:23 PM';
 
     if (post.cover_url) {
       cover.src = post.cover_url;
@@ -149,6 +165,17 @@
       back.addEventListener('click', function (e) {
         e.preventDefault();
         window.location.hash = '';
+        renderDetail(null);
+      });
+    }
+
+    var searchForm = document.getElementById('sidebar-search-form');
+    var searchInput = document.getElementById('sidebar-search-input');
+    if (searchForm && searchInput) {
+      searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        state.query = searchInput.value.trim();
+        renderList();
         renderDetail(null);
       });
     }

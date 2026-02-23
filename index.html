@@ -7,16 +7,11 @@
   <meta name="description" content="一个简洁的个人博客，记录思考与生活。">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="front-theme">
   <div class="page">
     <header class="site-header">
       <h1><a href="index.html" id="site-title-link">我的 BLOG</a></h1>
       <p class="tagline" id="site-tagline">思绪来得快去得也快，偶尔会在这里停留</p>
-      <p class="site-actions">
-        <a href="admin.html">写文章 / 管理后台</a>
-        <span class="divider">|</span>
-        <a href="setup.html">云端配置向导</a>
-      </p>
     </header>
 
     <p id="front-alert" class="cloud-alert hidden"></p>
@@ -33,31 +28,50 @@
           </div>
           <div id="detail-content"></div>
           <p class="post-meta" id="detail-meta"></p>
-          <p><a href="#" id="back-to-list">« 返回首页文章列表</a></p>
+          <p><a href="#" id="back-to-list">阅读全文首页 »</a></p>
         </article>
       </main>
 
       <aside class="sidebar">
         <section class="panel">
-          <h4>About</h4>
-          <p id="about-text">你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。</p>
+          <h4>MISC</h4>
+          <ul>
+            <li><a href="mailto:hello@example.com">用 email 联系我</a></li>
+            <li><a href="https://github.com/kawadaxi" target="_blank" rel="noreferrer">Github</a></li>
+            <li><a href="admin.html">博客后台</a></li>
+            <li><a href="setup.html">云端配置向导</a></li>
+          </ul>
         </section>
 
         <section class="panel">
-          <h4>Archive</h4>
+          <h4>SEARCH</h4>
+          <form id="sidebar-search-form" class="search-row">
+            <input id="sidebar-search-input" type="text" placeholder="">
+            <button type="submit">站内搜索</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h4>CATEGORIES</h4>
+          <ul id="category-list"></ul>
+        </section>
+
+        <section class="panel">
+          <h4>ARCHIVE</h4>
           <ul id="archive-list"></ul>
         </section>
 
         <section class="panel">
-          <h4>Recent Posts</h4>
+          <h4>RECENT POSTS</h4>
           <ul id="recent-posts"></ul>
+        </section>
+
+        <section class="panel">
+          <h4>ABOUT</h4>
+          <p id="about-text">你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。</p>
         </section>
       </aside>
     </div>
-
-    <footer class="site-footer">
-      <a href="admin.html">进入后台写文章</a>
-    </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
