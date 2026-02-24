@@ -3,11 +3,13 @@
   if (!cloud) return;
 
   var client = cloud.getClient();
+  var DEFAULT_CATEGORIES = ['技术', '读书', '随笔'];
   var state = {
     site: {
       title: '我的 BLOG',
       tagline: '思绪来得快去得也快，偶尔会在这里停留',
-      about: '你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。'
+      about: '你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。',
+      categories: DEFAULT_CATEGORIES.slice()
     },
     posts: [],
     query: '',
@@ -19,6 +21,21 @@
     return String(text || '').replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
+  }
+
+  function parseCategories(input) {
+    if (Array.isArray(input)) return input.filter(Boolean);
+    return String(input || '').split(/[\n,]/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  function ensureCategories(input) {
+    var arr = parseCategories(input);
+    return arr.length ? arr : DEFAULT_CATEGORIES.slice();
+  }
+
+  function normalizeCategory(cat) {
+    var c = String(cat || '').trim();
+    return c || '未分类';
   }
 
   function sanitizeHtml(html) {
@@ -100,14 +117,6 @@
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
   }
 
-  function detectCategory(post) {
-    var text = [post.title, post.excerpt, stripHtml(toHtmlContent(post.content))].join(' ').toLowerCase();
-    if (/技术|编程|代码|开发|go|python|javascript|前端|后端|engine|debug|性能|算法/.test(text)) return '技术';
-    if (/读书|阅读|小说|书单|paper|书/.test(text)) return '读书';
-    if (/生活|日常|跑步|运动|旅行|家庭/.test(text)) return '生活';
-    return '随笔';
-  }
-
   function sortPosts(posts) {
     return posts.slice().sort(function (a, b) {
       var da = new Date(a.published_date || a.created_at || 0).getTime();
@@ -125,7 +134,7 @@
       }
 
       if (state.category) {
-        if (detectCategory(p) !== state.category) return false;
+        if (normalizeCategory(p.category) !== state.category) return false;
       }
 
       if (state.archive) {
@@ -172,7 +181,7 @@
         '<h3 class="post-title"><a href="#post-' + encodeURIComponent(post.id) + '">' + safe(post.title) + '</a></h3>' +
         '<p>' + safe(excerpt) + '</p>' +
         '<p class="post-more"><a href="#post-' + encodeURIComponent(post.id) + '">阅读全文 "' + safe(post.title) + '" »</a></p>' +
-        '<p class="post-meta">' + safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a></p>';
+        '<p class="post-meta">' + safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | 分类：' + safe(normalizeCategory(post.category)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a></p>';
       listWrap.appendChild(article);
     });
 
@@ -192,17 +201,18 @@
       return '<li><a href="#" data-archive="' + safe(k) + '">' + safe(k) + '</a> (' + groupedArchive[k] + ')</li>';
     }).join('');
 
-    var groupedCategory = {};
+    var catCounts = {};
     all.forEach(function (post) {
-      var c = detectCategory(post);
-      groupedCategory[c] = (groupedCategory[c] || 0) + 1;
+      var cat = normalizeCategory(post.category);
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
     });
 
-    var categoryOrder = ['技术', '读书', '随笔', '生活'];
-    category.innerHTML = '<li><a href="#" data-category="">全部</a> (' + all.length + ')</li>' + categoryOrder.filter(function (name) {
-      return groupedCategory[name];
-    }).map(function (name) {
-      return '<li><a href="#" data-category="' + safe(name) + '">' + safe(name) + '</a> (' + groupedCategory[name] + ')</li>';
+    var ordered = ensureCategories(state.site.categories);
+    if (catCounts['未分类']) ordered.push('未分类');
+    ordered = ordered.filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+
+    category.innerHTML = '<li><a href="#" data-category="">全部</a> (' + all.length + ')</li>' + ordered.map(function (name) {
+      return '<li><a href="#" data-category="' + safe(name) + '">' + safe(name) + '</a> (' + (catCounts[name] || 0) + ')</li>';
     }).join('');
   }
 
@@ -228,7 +238,7 @@
     titleEl.textContent = post.title || '';
     contentEl.innerHTML = toHtmlContent(post.content);
 
-    metaEl.innerHTML = safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a>';
+    metaEl.innerHTML = safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | 分类：' + safe(normalizeCategory(post.category)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a>';
 
     if (post.cover_url) {
       cover.src = post.cover_url;
@@ -303,6 +313,11 @@
     }
   }
 
+  function isMissingColumnError(err, col) {
+    var msg = (err && err.message) || '';
+    return msg.indexOf(col) !== -1 || msg.indexOf('column') !== -1;
+  }
+
   async function loadFromCloud() {
     if (!client) {
       cloud.showAlert('front-alert', '请先在 cloud-config.js 填写 Supabase 配置。');
@@ -314,24 +329,50 @@
 
     var settingsResp = await client
       .from('site_settings')
-      .select('title,tagline,about')
+      .select('title,tagline,about,categories')
       .eq('id', 1)
       .maybeSingle();
 
-    if (!settingsResp.error && settingsResp.data) {
+    if (settingsResp.error && isMissingColumnError(settingsResp.error, 'categories')) {
+      var fallbackSettings = await client
+        .from('site_settings')
+        .select('title,tagline,about')
+        .eq('id', 1)
+        .maybeSingle();
+      if (!fallbackSettings.error && fallbackSettings.data) {
+        state.site = fallbackSettings.data;
+        state.site.categories = DEFAULT_CATEGORIES.slice();
+      }
+    } else if (!settingsResp.error && settingsResp.data) {
       state.site = settingsResp.data;
+      state.site.categories = ensureCategories(settingsResp.data.categories);
     }
 
     var postsResp = await client
       .from('posts')
-      .select('id,title,published_date,author,excerpt,content,cover_url,created_at')
+      .select('id,title,published_date,author,excerpt,content,cover_url,created_at,category')
       .order('published_date', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (postsResp.error) {
+    if (postsResp.error && isMissingColumnError(postsResp.error, 'category')) {
+      var fallbackPosts = await client
+        .from('posts')
+        .select('id,title,published_date,author,excerpt,content,cover_url,created_at')
+        .order('published_date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (!fallbackPosts.error) {
+        state.posts = (fallbackPosts.data || []).map(function (p) {
+          p.category = '';
+          return p;
+        });
+      }
+    } else if (postsResp.error) {
       cloud.showAlert('front-alert', '读取文章失败：' + postsResp.error.message);
     } else {
-      state.posts = postsResp.data || [];
+      state.posts = (postsResp.data || []).map(function (p) {
+        if (!p.category) p.category = '';
+        return p;
+      });
       cloud.showAlert('front-alert', '');
     }
 

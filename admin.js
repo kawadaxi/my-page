@@ -3,11 +3,13 @@
   if (!cloud) return;
 
   var client = cloud.getClient();
+  var DEFAULT_CATEGORIES = ['技术', '读书', '随笔'];
   var state = {
     posts: [],
     editingId: null,
     pendingCoverFile: null,
-    savedRange: null
+    savedRange: null,
+    categories: DEFAULT_CATEGORIES.slice()
   };
 
   function byId(id) {
@@ -70,6 +72,36 @@
     return container.innerHTML;
   }
 
+  function parseCategories(text) {
+    var parts = String(text || '').split(/[\n,]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var uniq = [];
+    parts.forEach(function (item) {
+      if (uniq.indexOf(item) === -1) uniq.push(item);
+    });
+    return uniq;
+  }
+
+  function categoriesToText(arr) {
+    return (arr || []).join('\n');
+  }
+
+  function ensureCategories(arr) {
+    var parsed = Array.isArray(arr) ? arr.filter(Boolean) : [];
+    return parsed.length ? parsed : DEFAULT_CATEGORIES.slice();
+  }
+
+  function renderCategorySelect(selected) {
+    var select = byId('postCategory');
+    if (!select) return;
+    var current = selected || '';
+    var options = ['<option value="">未分类</option>'];
+    ensureCategories(state.categories).forEach(function (name) {
+      options.push('<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>');
+    });
+    select.innerHTML = options.join('');
+    select.value = current;
+  }
+
   function requireClient() {
     if (client) return true;
     cloud.showAlert('admin-alert', '请先在 cloud-config.js 填写 Supabase 配置。');
@@ -91,6 +123,7 @@
     editorEl().innerHTML = '<p><br></p>';
     byId('postCover').value = '';
     byId('inlineImageUpload').value = '';
+    renderCategorySelect('');
   }
 
   function renderPostList() {
@@ -105,7 +138,7 @@
         '<div class="admin-post-item">' +
         '<div>' +
         '<strong>' + escapeHtml(post.title) + '</strong>' +
-        '<p>' + escapeHtml(post.published_date || '') + ' | ' + escapeHtml(post.author || '站长') + '</p>' +
+        '<p>' + escapeHtml(post.published_date || '') + ' | ' + escapeHtml(post.author || '站长') + ' | ' + escapeHtml(post.category || '未分类') + '</p>' +
         '</div>' +
         '<div class="admin-post-actions">' +
         '<button data-edit="' + post.id + '" type="button">编辑</button>' +
@@ -127,9 +160,23 @@
     });
   }
 
+  function isMissingColumnError(err, col) {
+    var msg = (err && err.message) || '';
+    return msg.indexOf(col) !== -1 || msg.indexOf('column') !== -1;
+  }
+
   async function loadSiteSettings() {
-    var resp = await client.from('site_settings').select('title,tagline,about').eq('id', 1).maybeSingle();
-    if (resp.error) {
+    var resp = await client.from('site_settings').select('title,tagline,about,categories').eq('id', 1).maybeSingle();
+
+    if (resp.error && isMissingColumnError(resp.error, 'categories')) {
+      var fallback = await client.from('site_settings').select('title,tagline,about').eq('id', 1).maybeSingle();
+      if (fallback.error) {
+        cloud.showAlert('admin-alert', '读取站点设置失败：' + fallback.error.message);
+        return;
+      }
+      resp = fallback;
+      cloud.showAlert('admin-alert', '检测到数据库缺少 categories 字段，请执行 supabase/migration_add_categories.sql。');
+    } else if (resp.error) {
       cloud.showAlert('admin-alert', '读取站点设置失败：' + resp.error.message);
       return;
     }
@@ -138,20 +185,39 @@
     byId('siteTitle').value = d.title || '';
     byId('siteTagline').value = d.tagline || '';
     byId('aboutText').value = d.about || '';
+    state.categories = ensureCategories(Array.isArray(d.categories) ? d.categories : parseCategories(d.categories || ''));
+    byId('siteCategories').value = categoriesToText(state.categories);
+    renderCategorySelect(byId('postCategory').value || '');
   }
 
   async function loadPosts() {
     var resp = await client
       .from('posts')
-      .select('id,title,published_date,author,excerpt,content,cover_url,created_at')
+      .select('id,title,published_date,author,excerpt,content,cover_url,created_at,category')
       .order('published_date', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (resp.error) {
+    if (resp.error && isMissingColumnError(resp.error, 'category')) {
+      var fallback = await client
+        .from('posts')
+        .select('id,title,published_date,author,excerpt,content,cover_url,created_at')
+        .order('published_date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (fallback.error) {
+        cloud.showAlert('admin-alert', '读取文章失败：' + fallback.error.message);
+        return;
+      }
+      resp = fallback;
+      cloud.showAlert('admin-alert', '检测到数据库缺少 posts.category 字段，请执行 supabase/migration_add_categories.sql。');
+    } else if (resp.error) {
       cloud.showAlert('admin-alert', '读取文章失败：' + resp.error.message);
       return;
     }
-    state.posts = resp.data || [];
+
+    state.posts = (resp.data || []).map(function (p) {
+      if (!p.category) p.category = '';
+      return p;
+    });
     renderPostList();
   }
 
@@ -167,6 +233,7 @@
     byId('postDate').value = String(post.published_date || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
     byId('postAuthor').value = post.author || '';
     byId('postExcerpt').value = post.excerpt || '';
+    renderCategorySelect(post.category || '');
     editorEl().innerHTML = normalizeForEditor(post.content || '');
     byId('postCover').value = '';
     byId('inlineImageUpload').value = '';
@@ -272,6 +339,7 @@
     var title = byId('postTitle').value.trim();
     var published_date = byId('postDate').value;
     var author = byId('postAuthor').value.trim() || '站长';
+    var category = byId('postCategory').value || '';
     var contentHtml = getEditorHtml();
     var excerpt = byId('postExcerpt').value.trim() || getAutoExcerpt(contentHtml);
 
@@ -288,6 +356,7 @@
           title: title,
           published_date: published_date,
           author: author,
+          category: category,
           excerpt: excerpt,
           content: contentHtml
         };
@@ -301,6 +370,7 @@
           title: title,
           published_date: published_date,
           author: author,
+          category: category,
           excerpt: excerpt,
           content: contentHtml,
           cover_url: newCoverUrl || null
@@ -312,6 +382,10 @@
       resetEditor();
       alert('文章已保存到云端。');
     } catch (err) {
+      if (isMissingColumnError(err, 'category')) {
+        alert('数据库缺少 category 字段，请先执行 supabase/migration_add_categories.sql');
+        return;
+      }
       alert(err.message || '保存失败');
     }
   }
@@ -332,18 +406,29 @@
   }
 
   async function saveSiteConfig() {
+    var categories = parseCategories(byId('siteCategories').value);
+    state.categories = ensureCategories(categories);
+
     var body = {
       id: 1,
       title: byId('siteTitle').value.trim() || '我的 BLOG',
       tagline: byId('siteTagline').value.trim(),
-      about: byId('aboutText').value.trim()
+      about: byId('aboutText').value.trim(),
+      categories: state.categories
     };
 
     var resp = await client.from('site_settings').upsert(body, { onConflict: 'id' });
     if (resp.error) {
-      alert('保存失败：' + resp.error.message);
+      if (isMissingColumnError(resp.error, 'categories')) {
+        alert('数据库缺少 categories 字段，请先执行 supabase/migration_add_categories.sql');
+      } else {
+        alert('保存失败：' + resp.error.message);
+      }
       return;
     }
+
+    byId('siteCategories').value = categoriesToText(state.categories);
+    renderCategorySelect(byId('postCategory').value || '');
     alert('站点设置已保存到云端。');
   }
 

@@ -47,6 +47,9 @@
         <label>关于我</label>
         <textarea id="aboutText" rows="4" placeholder="例如：你好，我是小明，后端工程师。"></textarea>
 
+        <label>CATEGORIES（每行一个，或用逗号分隔）</label>
+        <textarea id="siteCategories" rows="4" placeholder="技术&#10;读书&#10;随笔"></textarea>
+
         <button id="saveSiteConfig" class="btn-primary" type="button">保存站点设置</button>
       </section>
 
@@ -61,6 +64,9 @@
 
         <label>作者名</label>
         <input id="postAuthor" type="text" placeholder="例如：小明">
+
+        <label>文章分类</label>
+        <select id="postCategory"></select>
 
         <label>摘要（显示在首页）</label>
         <textarea id="postExcerpt" rows="3" placeholder="100~200 字左右，不填则自动截取正文"></textarea>

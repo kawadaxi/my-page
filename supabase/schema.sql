@@ -7,6 +7,7 @@ create table if not exists public.site_settings (
   title text not null default '我的 BLOG',
   tagline text not null default '思绪来得快去得也快，偶尔会在这里停留',
   about text not null default '你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。',
+  categories jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
 
@@ -21,6 +22,7 @@ create table if not exists public.posts (
   author text not null default '站长',
   excerpt text not null default '',
   content text not null,
+  category text not null default '',
   cover_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

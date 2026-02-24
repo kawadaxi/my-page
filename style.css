@@ -253,6 +253,7 @@ a:hover {
 .admin-card input[type="email"],
 .admin-card input[type="password"],
 .admin-card input[type="file"],
+.admin-card select,
 .admin-card textarea {
   box-sizing: border-box;
   width: 100%;
