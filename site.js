@@ -10,7 +10,9 @@
       about: '你好，我是站长。这里是我的个人博客，主要记录技术、阅读和日常思考。'
     },
     posts: [],
-    query: ''
+    query: '',
+    category: '',
+    archive: ''
   };
 
   function safe(text) {
@@ -26,6 +28,36 @@
     return m + ' ' + d.getDate() + ', ' + d.getFullYear();
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function getMetaDate(post) {
+    if (post.created_at) {
+      var created = new Date(post.created_at);
+      if (!isNaN(created.getTime())) return created;
+    }
+    if (post.published_date) {
+      var pub = new Date(post.published_date + 'T00:00:00');
+      if (!isNaN(pub.getTime())) return pub;
+    }
+    return null;
+  }
+
+  function formatDateTime(post) {
+    var d = getMetaDate(post);
+    if (!d) return String(post.published_date || '未知时间');
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function detectCategory(post) {
+    var text = [post.title, post.excerpt, post.content].join(' ').toLowerCase();
+    if (/技术|编程|代码|开发|go|python|javascript|前端|后端|engine|debug|性能|算法/.test(text)) return '技术';
+    if (/读书|阅读|小说|书单|paper|书/.test(text)) return '读书';
+    if (/生活|日常|跑步|运动|旅行|家庭/.test(text)) return '生活';
+    return '随笔';
+  }
+
   function sortPosts(posts) {
     return posts.slice().sort(function (a, b) {
       var da = new Date(a.published_date || a.created_at || 0).getTime();
@@ -35,11 +67,23 @@
   }
 
   function filterPosts(posts) {
-    if (!state.query) return posts;
-    var q = state.query.toLowerCase();
     return posts.filter(function (p) {
-      var text = [p.title, p.excerpt, p.content].join(' ').toLowerCase();
-      return text.indexOf(q) !== -1;
+      if (state.query) {
+        var q = state.query.toLowerCase();
+        var text = [p.title, p.excerpt, p.content].join(' ').toLowerCase();
+        if (text.indexOf(q) === -1) return false;
+      }
+
+      if (state.category) {
+        if (detectCategory(p) !== state.category) return false;
+      }
+
+      if (state.archive) {
+        var ym = String(p.published_date || '').slice(0, 7);
+        if (ym !== state.archive) return false;
+      }
+
+      return true;
     });
   }
 
@@ -77,7 +121,7 @@
         '<h3 class="post-title"><a href="#post-' + encodeURIComponent(post.id) + '">' + safe(post.title) + '</a></h3>' +
         '<p>' + safe(excerpt) + '</p>' +
         '<p class="post-more"><a href="#post-' + encodeURIComponent(post.id) + '">阅读全文 "' + safe(post.title) + '" »</a></p>' +
-        '<p class="post-meta">' + safe(post.author || '站长') + ' 提交于 01:23 PM | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a></p>';
+        '<p class="post-meta">' + safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a></p>';
       listWrap.appendChild(article);
     });
 
@@ -85,25 +129,29 @@
       return '<li><a href="#post-' + encodeURIComponent(post.id) + '">' + safe(post.title) + '</a></li>';
     }).join('');
 
-    var grouped = {};
+    var groupedArchive = {};
     all.forEach(function (post) {
       var ym = (post.published_date || '').slice(0, 7);
       if (!ym) return;
-      grouped[ym] = (grouped[ym] || 0) + 1;
+      groupedArchive[ym] = (groupedArchive[ym] || 0) + 1;
     });
 
-    archive.innerHTML = Object.keys(grouped).sort().reverse().map(function (k) {
-      return '<li>' + safe(k) + ' (' + grouped[k] + ')</li>';
+    var archiveItems = Object.keys(groupedArchive).sort().reverse();
+    archive.innerHTML = '<li><a href="#" data-archive="">全部</a> (' + all.length + ')</li>' + archiveItems.map(function (k) {
+      return '<li><a href="#" data-archive="' + safe(k) + '">' + safe(k) + '</a> (' + groupedArchive[k] + ')</li>';
     }).join('');
 
-    var categories = [
-      { name: '技术', count: all.length },
-      { name: '读书', count: Math.max(1, Math.floor(all.length / 3)) },
-      { name: '随笔', count: Math.max(1, Math.floor(all.length / 2)) },
-      { name: '生活', count: Math.max(1, Math.floor(all.length / 4)) }
-    ];
-    category.innerHTML = categories.map(function (c) {
-      return '<li><a href="#">' + safe(c.name) + '</a> (' + c.count + ')</li>';
+    var groupedCategory = {};
+    all.forEach(function (post) {
+      var c = detectCategory(post);
+      groupedCategory[c] = (groupedCategory[c] || 0) + 1;
+    });
+
+    var categoryOrder = ['技术', '读书', '随笔', '生活'];
+    category.innerHTML = '<li><a href="#" data-category="">全部</a> (' + all.length + ')</li>' + categoryOrder.filter(function (name) {
+      return groupedCategory[name];
+    }).map(function (name) {
+      return '<li><a href="#" data-category="' + safe(name) + '">' + safe(name) + '</a> (' + groupedCategory[name] + ')</li>';
     }).join('');
   }
 
@@ -127,6 +175,7 @@
 
     dateEl.textContent = formatDate(post.published_date);
     titleEl.textContent = post.title || '';
+
     var paragraphs = String(post.content || '').split('\n').filter(function (line) {
       return line.trim().length > 0;
     });
@@ -134,7 +183,7 @@
       return '<p>' + safe(p) + '</p>';
     }).join('');
 
-    metaEl.textContent = (post.author || '站长') + ' 提交于 01:23 PM';
+    metaEl.innerHTML = safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a>';
 
     if (post.cover_url) {
       cover.src = post.cover_url;
@@ -175,6 +224,34 @@
       searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
         state.query = searchInput.value.trim();
+        renderList();
+        renderDetail(null);
+      });
+    }
+
+    var categoryList = document.getElementById('category-list');
+    if (categoryList) {
+      categoryList.addEventListener('click', function (e) {
+        var target = e.target;
+        if (!target || target.tagName !== 'A') return;
+        var value = target.getAttribute('data-category');
+        if (value === null) return;
+        e.preventDefault();
+        state.category = value;
+        renderList();
+        renderDetail(null);
+      });
+    }
+
+    var archiveList = document.getElementById('archive-list');
+    if (archiveList) {
+      archiveList.addEventListener('click', function (e) {
+        var target = e.target;
+        if (!target || target.tagName !== 'A') return;
+        var value = target.getAttribute('data-archive');
+        if (value === null) return;
+        e.preventDefault();
+        state.archive = value;
         renderList();
         renderDetail(null);
       });
