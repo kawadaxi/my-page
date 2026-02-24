@@ -21,6 +21,56 @@
     });
   }
 
+  function sanitizeHtml(html) {
+    var doc = document.implementation.createHTMLDocument('render');
+    var container = doc.createElement('div');
+    container.innerHTML = String(html || '');
+
+    container.querySelectorAll('script,style,iframe,object,embed').forEach(function (n) {
+      n.remove();
+    });
+
+    container.querySelectorAll('*').forEach(function (el) {
+      Array.from(el.attributes).forEach(function (attr) {
+        var name = attr.name.toLowerCase();
+        var value = attr.value || '';
+        if (name.startsWith('on')) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+        if ((name === 'href' || name === 'src') && /^javascript:/i.test(value)) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+      });
+    });
+
+    return container.innerHTML;
+  }
+
+  function hasHtmlTag(content) {
+    return /<\/?[a-z][\s\S]*>/i.test(String(content || ''));
+  }
+
+  function toHtmlContent(content) {
+    var text = String(content || '');
+    if (!text.trim()) return '<p></p>';
+    if (hasHtmlTag(text)) return sanitizeHtml(text);
+
+    return text
+      .split(/\n{2,}/)
+      .map(function (part) {
+        return '<p>' + safe(part).replace(/\n/g, '<br>') + '</p>';
+      })
+      .join('');
+  }
+
+  function stripHtml(html) {
+    var div = document.createElement('div');
+    div.innerHTML = String(html || '');
+    return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
   function formatDate(isoDate) {
     var d = new Date(isoDate);
     if (isNaN(d.getTime())) return String(isoDate || '').toUpperCase();
@@ -51,7 +101,7 @@
   }
 
   function detectCategory(post) {
-    var text = [post.title, post.excerpt, post.content].join(' ').toLowerCase();
+    var text = [post.title, post.excerpt, stripHtml(toHtmlContent(post.content))].join(' ').toLowerCase();
     if (/技术|编程|代码|开发|go|python|javascript|前端|后端|engine|debug|性能|算法/.test(text)) return '技术';
     if (/读书|阅读|小说|书单|paper|书/.test(text)) return '读书';
     if (/生活|日常|跑步|运动|旅行|家庭/.test(text)) return '生活';
@@ -70,7 +120,7 @@
     return posts.filter(function (p) {
       if (state.query) {
         var q = state.query.toLowerCase();
-        var text = [p.title, p.excerpt, p.content].join(' ').toLowerCase();
+        var text = [p.title, p.excerpt, stripHtml(toHtmlContent(p.content))].join(' ').toLowerCase();
         if (text.indexOf(q) === -1) return false;
       }
 
@@ -113,7 +163,8 @@
     }
 
     posts.forEach(function (post) {
-      var excerpt = post.excerpt || String(post.content || '').split('\n').filter(Boolean)[0] || '';
+      var fallbackExcerpt = stripHtml(toHtmlContent(post.content));
+      var excerpt = post.excerpt || (fallbackExcerpt.length > 120 ? fallbackExcerpt.slice(0, 120) + '...' : fallbackExcerpt);
       var article = document.createElement('article');
       article.className = 'post';
       article.innerHTML =
@@ -175,13 +226,7 @@
 
     dateEl.textContent = formatDate(post.published_date);
     titleEl.textContent = post.title || '';
-
-    var paragraphs = String(post.content || '').split('\n').filter(function (line) {
-      return line.trim().length > 0;
-    });
-    contentEl.innerHTML = paragraphs.map(function (p) {
-      return '<p>' + safe(p) + '</p>';
-    }).join('');
+    contentEl.innerHTML = toHtmlContent(post.content);
 
     metaEl.innerHTML = safe(post.author || '站长') + ' 提交于 ' + safe(formatDateTime(post)) + ' | <a href="#post-' + encodeURIComponent(post.id) + '">固定链接</a>';
 

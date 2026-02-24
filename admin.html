@@ -63,10 +63,31 @@
         <input id="postAuthor" type="text" placeholder="例如：小明">
 
         <label>摘要（显示在首页）</label>
-        <textarea id="postExcerpt" rows="3" placeholder="100~200 字左右"></textarea>
+        <textarea id="postExcerpt" rows="3" placeholder="100~200 字左右，不填则自动截取正文"></textarea>
 
-        <label>正文（支持多段落，段落之间空一行）</label>
-        <textarea id="postContent" rows="10" placeholder="在这里写完整文章内容"></textarea>
+        <label>正文（富文本）</label>
+        <div id="editorToolbar" class="editor-toolbar">
+          <button type="button" data-cmd="bold"><strong>B</strong></button>
+          <button type="button" data-cmd="italic"><em>I</em></button>
+          <button type="button" data-cmd="underline"><u>U</u></button>
+          <button type="button" data-cmd="insertUnorderedList">• 列表</button>
+          <button type="button" data-cmd="formatBlock" data-value="blockquote">引用</button>
+          <button type="button" id="clearFormat">清除格式</button>
+          <select id="fontSizeSelect" title="字号">
+            <option value="">字号</option>
+            <option value="12">12px</option>
+            <option value="14">14px</option>
+            <option value="16">16px</option>
+            <option value="18">18px</option>
+            <option value="22">22px</option>
+            <option value="28">28px</option>
+          </select>
+          <label class="color-label" for="textColorPicker">颜色</label>
+          <input id="textColorPicker" type="color" value="#222222" title="字体颜色">
+          <button type="button" id="insertImageBtn">插入图片</button>
+        </div>
+        <div id="postContentEditor" class="rich-editor" contenteditable="true"></div>
+        <input id="inlineImageUpload" type="file" accept="image/*" class="hidden-input">
 
         <label>封面图（可选）</label>
         <input id="postCover" type="file" accept="image/*">

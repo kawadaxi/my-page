@@ -351,3 +351,69 @@ a:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.editor-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.editor-toolbar button,
+.editor-toolbar select,
+.editor-toolbar input[type="color"] {
+  border: 1px solid #c9c9c9;
+  background: #f7f7f7;
+  color: #333;
+  font-size: 12px;
+  padding: 5px 8px;
+  height: 30px;
+  box-sizing: border-box;
+}
+
+.editor-toolbar .color-label {
+  align-self: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.rich-editor {
+  min-height: 220px;
+  border: 1px solid #d6d6d6;
+  padding: 10px;
+  background: #fff;
+  overflow: auto;
+}
+
+.rich-editor:focus {
+  outline: 2px solid #cde0f7;
+  border-color: #7ba2cf;
+}
+
+.rich-editor p {
+  margin: 0 0 10px;
+}
+
+.rich-editor blockquote {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border-left: 3px solid #9ab3cf;
+  background: #f8fbff;
+}
+
+.rich-editor img,
+#detail-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+#detail-content blockquote {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border-left: 3px solid #bac8d8;
+  background: #f4f7fb;
+}
+
+.hidden-input {
+  display: none;
+}

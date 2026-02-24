@@ -6,17 +6,68 @@
   var state = {
     posts: [],
     editingId: null,
-    pendingCoverFile: null
+    pendingCoverFile: null,
+    savedRange: null
   };
 
   function byId(id) {
     return document.getElementById(id);
   }
 
+  function editorEl() {
+    return byId('postContentEditor');
+  }
+
   function escapeHtml(text) {
     return String(text || '').replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
     });
+  }
+
+  function stripHtml(html) {
+    var div = document.createElement('div');
+    div.innerHTML = String(html || '');
+    return (div.textContent || div.innerText || '').trim();
+  }
+
+  function normalizeForEditor(content) {
+    var text = String(content || '');
+    var hasHtml = /<\/?[a-z][\s\S]*>/i.test(text);
+    if (hasHtml) return text;
+    if (!text.trim()) return '<p><br></p>';
+    return text
+      .split(/\n{2,}/)
+      .map(function (part) {
+        return '<p>' + escapeHtml(part).replace(/\n/g, '<br>') + '</p>';
+      })
+      .join('');
+  }
+
+  function sanitizeHtml(html) {
+    var doc = document.implementation.createHTMLDocument('editor');
+    var container = doc.createElement('div');
+    container.innerHTML = String(html || '');
+
+    container.querySelectorAll('script,style,iframe,object,embed').forEach(function (n) {
+      n.remove();
+    });
+
+    container.querySelectorAll('*').forEach(function (el) {
+      Array.from(el.attributes).forEach(function (attr) {
+        var name = attr.name.toLowerCase();
+        var value = attr.value || '';
+        if (name.startsWith('on')) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+        if ((name === 'href' || name === 'src') && /^javascript:/i.test(value)) {
+          el.removeAttribute(attr.name);
+          return;
+        }
+      });
+    });
+
+    return container.innerHTML;
   }
 
   function requireClient() {
@@ -37,8 +88,9 @@
     byId('postDate').value = new Date().toISOString().slice(0, 10);
     byId('postAuthor').value = '';
     byId('postExcerpt').value = '';
-    byId('postContent').value = '';
+    editorEl().innerHTML = '<p><br></p>';
     byId('postCover').value = '';
+    byId('inlineImageUpload').value = '';
   }
 
   function renderPostList() {
@@ -115,24 +167,23 @@
     byId('postDate').value = String(post.published_date || '').slice(0, 10) || new Date().toISOString().slice(0, 10);
     byId('postAuthor').value = post.author || '';
     byId('postExcerpt').value = post.excerpt || '';
-    byId('postContent').value = post.content || '';
+    editorEl().innerHTML = normalizeForEditor(post.content || '');
     byId('postCover').value = '';
+    byId('inlineImageUpload').value = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async function uploadCoverIfNeeded() {
-    if (!state.pendingCoverFile) return null;
-
-    var file = state.pendingCoverFile;
+  async function uploadImage(file, folder) {
+    if (!file) return null;
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    var path = 'covers/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+    var path = folder + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
 
     var uploadResp = await client.storage
       .from(cloud.config.STORAGE_BUCKET || 'post-images')
       .upload(path, file, { upsert: false });
 
     if (uploadResp.error) {
-      throw new Error('封面上传失败：' + uploadResp.error.message);
+      throw new Error('图片上传失败：' + uploadResp.error.message);
     }
 
     var publicResp = client.storage
@@ -142,16 +193,91 @@
     return publicResp.data && publicResp.data.publicUrl ? publicResp.data.publicUrl : null;
   }
 
+  async function uploadCoverIfNeeded() {
+    return uploadImage(state.pendingCoverFile, 'covers');
+  }
+
+  function saveSelection() {
+    var sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    state.savedRange = sel.getRangeAt(0).cloneRange();
+  }
+
+  function restoreSelection() {
+    if (!state.savedRange) return;
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(state.savedRange);
+  }
+
+  function focusEditor() {
+    editorEl().focus();
+  }
+
+  function execCommand(cmd, value) {
+    focusEditor();
+    restoreSelection();
+    document.execCommand(cmd, false, value || null);
+    saveSelection();
+  }
+
+  function applyFontSize(px) {
+    if (!px) return;
+    focusEditor();
+    restoreSelection();
+    var sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+      document.execCommand('insertHTML', false, '<span style="font-size:' + px + 'px;">示例文字</span>');
+    } else {
+      var selected = sel.toString();
+      document.execCommand('insertHTML', false, '<span style="font-size:' + px + 'px;">' + escapeHtml(selected) + '</span>');
+    }
+    saveSelection();
+  }
+
+  function applyTextColor(color) {
+    if (!color) return;
+    execCommand('foreColor', color);
+  }
+
+  function insertImageAtCursor(url) {
+    if (!url) return;
+    focusEditor();
+    restoreSelection();
+    document.execCommand('insertHTML', false, '<p><img src="' + escapeHtml(url) + '" alt="image" style="max-width:100%;height:auto;"></p>');
+    saveSelection();
+  }
+
+  async function insertInlineImage(file) {
+    if (!file) return;
+    try {
+      var url = await uploadImage(file, 'inline');
+      insertImageAtCursor(url);
+    } catch (err) {
+      alert(err.message || '插图失败');
+    }
+  }
+
+  function getEditorHtml() {
+    return sanitizeHtml(editorEl().innerHTML || '');
+  }
+
+  function getAutoExcerpt(html) {
+    var txt = stripHtml(html).replace(/\s+/g, ' ').trim();
+    if (!txt) return '';
+    return txt.length > 120 ? txt.slice(0, 120) + '...' : txt;
+  }
+
   async function savePost() {
     var title = byId('postTitle').value.trim();
     var published_date = byId('postDate').value;
     var author = byId('postAuthor').value.trim() || '站长';
-    var excerpt = byId('postExcerpt').value.trim();
-    var content = byId('postContent').value.trim();
+    var contentHtml = getEditorHtml();
+    var excerpt = byId('postExcerpt').value.trim() || getAutoExcerpt(contentHtml);
 
     if (!title) return alert('请先输入文章标题');
     if (!published_date) return alert('请选择发布日期');
-    if (!content) return alert('请先输入正文内容');
+    if (!stripHtml(contentHtml)) return alert('请先输入正文内容');
 
     try {
       var newCoverUrl = await uploadCoverIfNeeded();
@@ -163,7 +289,7 @@
           published_date: published_date,
           author: author,
           excerpt: excerpt,
-          content: content
+          content: contentHtml
         };
         if (newCoverUrl) updateBody.cover_url = newCoverUrl;
         else if (current && current.cover_url) updateBody.cover_url = current.cover_url;
@@ -176,7 +302,7 @@
           published_date: published_date,
           author: author,
           excerpt: excerpt,
-          content: content,
+          content: contentHtml,
           cover_url: newCoverUrl || null
         });
         if (insertResp.error) throw new Error(insertResp.error.message);
@@ -283,6 +409,46 @@
     });
   }
 
+  function bindEditorEvents() {
+    var editor = editorEl();
+    editor.addEventListener('mouseup', saveSelection);
+    editor.addEventListener('keyup', saveSelection);
+    editor.addEventListener('focus', saveSelection);
+
+    byId('editorToolbar').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-cmd]');
+      if (!btn) return;
+      e.preventDefault();
+      var cmd = btn.getAttribute('data-cmd');
+      var value = btn.getAttribute('data-value') || null;
+      if (cmd === 'formatBlock' && value) execCommand(cmd, value);
+      else execCommand(cmd);
+    });
+
+    byId('clearFormat').addEventListener('click', function () {
+      execCommand('removeFormat');
+    });
+
+    byId('fontSizeSelect').addEventListener('change', function (e) {
+      applyFontSize(e.target.value);
+      e.target.value = '';
+    });
+
+    byId('textColorPicker').addEventListener('input', function (e) {
+      applyTextColor(e.target.value);
+    });
+
+    byId('insertImageBtn').addEventListener('click', function () {
+      byId('inlineImageUpload').click();
+    });
+
+    byId('inlineImageUpload').addEventListener('change', function (e) {
+      var file = e.target.files && e.target.files[0];
+      if (file) insertInlineImage(file);
+      e.target.value = '';
+    });
+  }
+
   function bindEvents() {
     byId('loginBtn').addEventListener('click', login);
     byId('logoutBtn').addEventListener('click', logout);
@@ -292,6 +458,7 @@
     byId('postCover').addEventListener('change', function (e) {
       state.pendingCoverFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
     });
+    bindEditorEvents();
   }
 
   function clearAuthInputs() {
